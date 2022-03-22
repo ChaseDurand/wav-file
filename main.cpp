@@ -4,7 +4,7 @@
 
 const int sampleRate = 44100;
 const int bitDepth = 16;
-const int channels = 1;
+const int channels = 2;
 
 class SineOscillator {
 
@@ -45,7 +45,7 @@ int main() {
     writeToFile(audioFile, channels, 2); // Number of channels
     writeToFile(audioFile, sampleRate, 4); // Sample rate
     writeToFile(audioFile, sampleRate * bitDepth * channels / 8, 4); // Average bytes per second
-    writeToFile(audioFile, bitDepth / 8, 2); // Block align
+    writeToFile(audioFile, channels * bitDepth / 8, 2); // Block align
     writeToFile(audioFile, bitDepth, 2); // Significant bits per sample
 
     // Data chunk
@@ -58,7 +58,9 @@ int main() {
     for (int i = 0; i < sampleRate * duration; ++i) {
         auto sample = sineOscillator.process();
         int intSample = static_cast<int>(sample * maxAmp);
-        writeToFile(audioFile, intSample, 2);
+        for(int j = 0; j < channels; ++j) {
+            writeToFile(audioFile, intSample, 2);
+        }
     }
 
     int postAudioPosition = audioFile.tellp();
