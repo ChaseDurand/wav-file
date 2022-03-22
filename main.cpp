@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
+#include <cstdlib>
+#include <ctime>
 
 const int sampleRate = 44100;
 const int bitDepth = 16;
@@ -27,6 +29,7 @@ void writeToFile(std::ofstream &file, int value, int size) {
 }
 
 int main() {
+    srand (static_cast <unsigned> (time(0)));
     SineOscillator sineOscillator(440, 0.5);
     int duration = 2; // Duration in seconds
 
@@ -57,9 +60,13 @@ int main() {
     auto maxAmp = pow(2, bitDepth - 1) - 1;
     for (int i = 0; i < sampleRate * duration; ++i) {
         auto sample = sineOscillator.process();
-        int intSample = static_cast<int>(sample * maxAmp);
+        float noiseAmp = 0.00f; // Stereo noise level
         for(int j = 0; j < channels; ++j) {
-            writeToFile(audioFile, intSample, 2);
+            float noise = -noiseAmp + static_cast<float>( rand() ) /
+                ( static_cast<float>( RAND_MAX / (2 * noiseAmp) ) );
+            sample += noise;
+            int intSample = static_cast<int>(sample * maxAmp);
+            writeToFile(audioFile, intSample, bitDepth / 8);
         }
     }
 
