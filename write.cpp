@@ -60,6 +60,10 @@ public:
         return buf.size();
     }
 
+    auto data() {
+        return buf.data();
+    }
+
     auto begin() {
         return buf.begin();
     }
@@ -118,10 +122,10 @@ int main() {
     // Add format chunk data size
     buffer.add(buffer.size() - preDataSize, 4, dataChunkSizePos);
 
-    std::ofstream fout("output.wav");
-    for(auto const& x : buffer) {
-        fout << x;
-    }
+    // Write buffer to file
+    std::ofstream f("output.wav");
+    f.write(buffer.data(), buffer.size());
+    f.close();
 
     return 0;
 }
