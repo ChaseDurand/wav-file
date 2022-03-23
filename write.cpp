@@ -30,10 +30,7 @@ class Buffer {
 public:
     Buffer() {}
 
-    int size(){
-        return buf.size();
-    }
-
+    // Push char* to buffer byte by byte.
     void add(const char* val) {
         int length = strlen(val);
         for(int i = 0; i < length; ++i) {
@@ -42,6 +39,8 @@ public:
         return;
     }
 
+    // Convert int val to size number of bytes and push to buffer.
+    // Optional argument for replacing starting at position (no bounds checking).
     void add(int val, int size, int position = -1) {
         int initialSize = size;
         while(size > 0) {
@@ -55,6 +54,10 @@ public:
             size--;
         }
         return;
+    }
+
+    int size(){
+        return buf.size();
     }
 
     auto begin() {
