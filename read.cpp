@@ -1,19 +1,5 @@
 #include <iostream>
-#include <cmath>
 #include <fstream>
-#include <cstdlib>
-#include <vector>
-#include <cstddef>
-#include <cstring>
-
-// TODO validate RIFF, WAVE, chunk sizes
-void validateChunkID(const char* str1, const char* str2){
-    if (strcmp(str1, str2)){
-        std::cout << "Error: expected " << str1 << " but found " << str2 << std::endl;
-        exit(1);
-    }
-    return;
-}
 
 class WavHeader {
 public:
@@ -35,8 +21,9 @@ public:
     std::string data;
     int dataSize;
 
-    // Get header info
+    // Get and validate header info
     void getHeader(std::ifstream& file) {
+        // Get header
         RIFF = byteToStr(file);
         totalSize = bytesToInt(file, 4);
         WAVE = byteToStr(file);
@@ -50,6 +37,8 @@ public:
         bitDepth = bytesToInt(file, 2);
         data = byteToStr(file);
         dataSize = bytesToInt(file, 4);
+        // Validate
+        validateHeader();
         return;
     }
 
@@ -102,6 +91,30 @@ private:
             --size;
         }
         return result;
+    }
+
+    // Validate header info.
+    // If any are invalid, exit program.
+    void validateHeader() {
+        bool valid = true;
+        valid &= validateString(RIFF, std::string("RIFF"));
+        valid &= validateString(WAVE, std::string("WAVE"));
+        valid &= validateString(fmt, std::string("fmt "));
+        valid &= validateString(data, std::string("data"));
+        if (!valid) {
+            exit(1);
+        }
+        return;
+    }
+
+    // Validate found vs expected.
+    // If mismatch, printing error and return false.
+    bool validateString(const std::string& found, const std::string& expected){
+        if (found.compare(expected)){
+            std::cout << "Error: expected '" << expected << "' but found '" << found << "'" << std::endl;
+            return false;
+        }
+        return true;
     }
 };
 
