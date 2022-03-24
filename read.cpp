@@ -60,6 +60,10 @@ public:
         // Data chunk
         std::cout << "Data header: " << data << std::endl;
         std::cout << "Data chunk size: " << dataSize << std::endl;
+
+        // Calculated info
+        float length = dataSize / bytesPerSec;
+        printf("Length: %.2fs\n", length);
     }
 
 private:
