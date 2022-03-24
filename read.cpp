@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <limits>
 
 class WavHeader {
 public:
@@ -20,25 +21,55 @@ public:
     // data sub chunk
     std::string data;
     int dataSize;
+    // Calculated chunk sizes
+    int foundTotalSize;
+    int fountFmtSize;
+    int foundDataSize;
 
-    // Get and validate header info
+    // Get header info
     void getHeader(std::ifstream& file) {
-        // Get header
+        // RIFF
         RIFF = byteToStr(file);
         totalSize = bytesToInt(file, 4);
+        std::streampos posMarkerTotal = file.tellg();
         WAVE = byteToStr(file);
+        // fmt
         fmt = byteToStr(file);
         fmtSize =  bytesToInt(file, 4);
+        std::streampos posMarkerFmt = file.tellg();
         compressionCode = bytesToInt(file, 2);
         channels = bytesToInt(file, 2);
         sampleRate = bytesToInt(file, 4);
         bytesPerSec = bytesToInt(file, 4);
         blockAlign = bytesToInt(file, 2);
         bitDepth = bytesToInt(file, 2);
+        fountFmtSize = static_cast<int>(file.tellg() - posMarkerFmt);
+        // data
         data = byteToStr(file);
         dataSize = bytesToInt(file, 4);
-        // Validate
-        validateHeader();
+        std::streampos posMarkerData = file.tellg();
+        // Seek to end to find sizes
+        file.ignore( std::numeric_limits<std::streamsize>::max() );
+        file.seekg(0, std::ios_base::end);
+        foundTotalSize = static_cast<int>(file.tellg() - posMarkerTotal);
+        foundDataSize = static_cast<int>(file.tellg() - posMarkerData);
+        return;
+    }
+    
+    // Validate header info.
+    // If any are invalid, exit program.
+    void validateHeader() {
+        bool valid = true;
+        valid &= isEqual(RIFF, std::string("RIFF"));
+        valid &= isEqual(WAVE, std::string("WAVE"));
+        valid &= isEqual(fmt, std::string("fmt "));
+        valid &= isEqual(data, std::string("data"));
+        valid &= isEqual(foundTotalSize, totalSize);
+        valid &= isEqual(fountFmtSize, fmtSize);
+        valid &= isEqual(foundDataSize, dataSize);
+        if (!valid) {
+            exit(1);
+        }
         return;
     }
 
@@ -60,7 +91,6 @@ public:
         // Data chunk
         std::cout << "Data header: " << data << std::endl;
         std::cout << "Data chunk size: " << dataSize << std::endl;
-
         // Calculated info
         float length = dataSize / bytesPerSec;
         printf("Length: %.2fs\n", length);
@@ -97,24 +127,12 @@ private:
         return result;
     }
 
-    // Validate header info.
-    // If any are invalid, exit program.
-    void validateHeader() {
-        bool valid = true;
-        valid &= validateString(RIFF, std::string("RIFF"));
-        valid &= validateString(WAVE, std::string("WAVE"));
-        valid &= validateString(fmt, std::string("fmt "));
-        valid &= validateString(data, std::string("data"));
-        if (!valid) {
-            exit(1);
-        }
-        return;
-    }
-
-    // Validate found vs expected.
+    // Validate found vs expected string.
     // If mismatch, printing error and return false.
-    bool validateString(const std::string& found, const std::string& expected){
-        if (found.compare(expected)){
+    template <class T>
+    bool isEqual(const T& found, const T& expected){
+        // if (found.compare(expected)){
+        if (found != expected){
             std::cout << "Error: expected '" << expected << "' but found '" << found << "'" << std::endl;
             return false;
         }
@@ -127,6 +145,7 @@ int main() {
     std::ifstream inputFile;
     inputFile.open("output.wav", std::ios::binary);
     wavHeader.getHeader(inputFile);
+    wavHeader.validateHeader();
     wavHeader.info();
     inputFile.close();
     return 0;
