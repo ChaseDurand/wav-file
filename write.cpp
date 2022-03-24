@@ -11,6 +11,8 @@ const int sampleRate = 44100;
 const int bitDepth = 16;
 const int channels = 2;
 const int duration = 2; // Duration in seconds
+const float frequency = 440;
+const float amplitude = 0.5; // 0-1
 
 class SineOscillator {
 public:
@@ -77,7 +79,7 @@ private:
 
 int main() {
     srand (static_cast <unsigned> (time(0)));
-    SineOscillator sineOscillator(440, 0.5);
+    SineOscillator sineOscillator(frequency, amplitude);
     Buffer buffer;
 
     // Header chunk
